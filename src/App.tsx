@@ -30,7 +30,7 @@ export default function App() {
   useEffect(() => {
     const fetchVegetables = async () => {
       try {
-        const response = await fetch("https://vege-catalog.onrender.com");
+        const response = await fetch("https://vege-catalog.onrender.com/api/vegetables");
         if (!response.ok) {
           throw new Error("Failed to fetch vegetables");
         }
