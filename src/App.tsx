@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, ShoppingBasket, Info, Tag, Plus, Upload, X, Image as ImageIcon, Edit2, Trash2 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion"; // Changed to framer-motion for compatibility
 
 interface Vegetable {
   id: number;
@@ -10,18 +10,16 @@ interface Vegetable {
   imageUrl: string;
 }
 
+// 1. Define your backend URL globally
+const API_BASE_URL = "https://vege-catalog.onrender.com/api/vegetables";
+
 export default function App() {
   const [vegetables, setVegetables] = useState<Vegetable[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newVeg, setNewVeg] = useState({
-    name: "",
-    price: "",
-    description: "",
-    imageUrl: ""
-  });
+  const [newVeg, setNewVeg] = useState({ name: "", price: "", description: "", imageUrl: "" });
   const [isDragging, setIsDragging] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [vegToDelete, setVegToDelete] = useState<Vegetable | null>(null);
@@ -30,10 +28,9 @@ export default function App() {
   useEffect(() => {
     const fetchVegetables = async () => {
       try {
-        const response = await fetch("https://vege-catalog.onrender.com/api/vegetables");
-        if (!response.ok) {
-          throw new Error("Failed to fetch vegetables");
-        }
+        // 2. Used the full Render URL here
+        const response = await fetch(API_BASE_URL);
+        if (!response.ok) throw new Error("Failed to fetch vegetables");
         const data = await response.json();
         setVegetables(data);
       } catch (err) {
@@ -42,38 +39,16 @@ export default function App() {
         setLoading(false);
       }
     };
-
     fetchVegetables();
   }, []);
-
-  const filteredVegetables = vegetables.filter((veg) =>
-    veg.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
-    let file: File | null = null;
-    
-    if ("files" in e.target && e.target.files) {
-      file = e.target.files[0];
-    } else if ("dataTransfer" in e && e.dataTransfer.files) {
-      file = e.dataTransfer.files[0];
-    }
-
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setNewVeg({ ...newVeg, imageUrl: event.target?.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleAddVegetable = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVeg.name || !newVeg.price || !newVeg.imageUrl) return;
 
     try {
-      const url = editingId ? `/api/vegetables/${editingId}` : "/api/vegetables";
+      // 3. Added full URL for POST and PUT
+      const url = editingId ? `${API_BASE_URL}/${editingId}` : API_BASE_URL;
       const method = editingId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -87,8 +62,7 @@ export default function App() {
         })
       });
 
-      if (!response.ok) throw new Error(`Failed to ${editingId ? 'update' : 'add'} vegetable`);
-      
+      if (!response.ok) throw new Error("Failed to save vegetable");
       const result = await response.json();
       
       if (editingId) {
@@ -96,27 +70,20 @@ export default function App() {
       } else {
         setVegetables(prev => [result, ...prev]);
       }
-
       closeModal();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleDeleteVegetable = (veg: Vegetable) => {
-    setVegToDelete(veg);
-  };
-
   const confirmDelete = async () => {
     if (!vegToDelete) return;
-
     try {
-      const response = await fetch(`/api/vegetables/${vegToDelete.id}`, {
+      // 4. Added full URL for DELETE
+      const response = await fetch(`${API_BASE_URL}/${vegToDelete.id}`, {
         method: "DELETE"
       });
-
       if (!response.ok) throw new Error("Failed to delete vegetable");
-      
       setVegetables(prev => prev.filter(v => v.id !== vegToDelete.id));
       setVegToDelete(null);
     } catch (err) {
@@ -124,22 +91,38 @@ export default function App() {
     }
   };
 
-  const openEditModal = (veg: Vegetable) => {
-    setEditingId(veg.id);
-    setNewVeg({
-      name: veg.name,
-      price: veg.price.toString(),
-      description: veg.description,
-      imageUrl: veg.imageUrl
-    });
-    setIsModalOpen(true);
-  };
-
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setNewVeg({ name: "", price: "", description: "", imageUrl: "" });
   };
+
+  const openEditModal = (veg: Vegetable) => {
+    setEditingId(veg.id);
+    setNewVeg({ name: veg.name, price: veg.price.toString(), description: veg.description, imageUrl: veg.imageUrl });
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteVegetable = (veg: Vegetable) => {
+    setVegToDelete(veg);
+  };
+
+  const handleImageUpload = async (e: React.DragEvent<HTMLDivElement> | React.ChangeEvent<HTMLInputElement>) => {
+    const file = 'dataTransfer' in e ? e.dataTransfer.files[0] : e.currentTarget.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setNewVeg({ ...newVeg, imageUrl: base64 });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const filteredVegetables = vegetables.filter(veg =>
+    veg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    veg.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-sans">
