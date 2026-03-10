@@ -1,0 +1,5 @@
+{
+  "name": "Vegetable Catalog",
+  "description": "A fresh catalog of vegetables with pricing, origins, and descriptions, featuring a searchable interface.",
+  "requestFramePermissions": []
+}

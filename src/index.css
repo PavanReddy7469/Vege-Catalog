@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Optional: Add a smooth font */
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+}
