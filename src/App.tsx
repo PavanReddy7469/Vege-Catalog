@@ -25,22 +25,26 @@ export default function App() {
   const [vegToDelete, setVegToDelete] = useState<Vegetable | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const fetchVegetables = async () => {
-      try {
-        // 2. Used the full Render URL here
-        const response = await fetch(API_BASE_URL);
-        if (!response.ok) throw new Error("Failed to fetch vegetables");
-        const data = await response.json();
-        setVegetables(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const fetchVegetables = async () => {
+    try {
+      // NOTE: You must include /api/vegetables at the end!
+      const response = await fetch("https://vege-catalog.onrender.com/api/vegetables");
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch vegetables");
       }
-    };
-    fetchVegetables();
-  }, []);
+      const data = await response.json();
+      setVegetables(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchVegetables();
+}, []);
 
   const handleAddVegetable = async (e: React.FormEvent) => {
     e.preventDefault();

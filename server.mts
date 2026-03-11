@@ -5,7 +5,11 @@ const app = express();
 const PORT = 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "*", // This allows any site (like your Netlify app) to connect
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"]
+}));
 app.use(express.json({ limit: '50mb' }));
 
 // Mock Database
