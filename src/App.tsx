@@ -10,7 +10,7 @@ interface Vegetable {
   imageUrl: string;
 }
 
-// THE ABSOLUTE BACKEND URL - Critical for Netlify -> Render communication
+// CRITICAL: Pointing to Render backend
 const API_BASE_URL = "https://vege-catalog.onrender.com/api/vegetables";
 
 export default function App() {
@@ -32,7 +32,7 @@ export default function App() {
       try {
         const response = await fetch(API_BASE_URL);
         if (!response.ok) {
-          throw new Error("The farm server is currently unavailable.");
+          throw new Error("The farm server is currently sleeping or unavailable.");
         }
         const data = await response.json();
         setVegetables(data);
@@ -47,7 +47,7 @@ export default function App() {
     fetchVegetables();
   }, []);
 
-  // ADD/EDIT: POST or PUT vegetable
+  // ADD/EDIT Logic
   const handleAddVegetable = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVeg.name || !newVeg.price || !newVeg.imageUrl) return;
@@ -67,7 +67,7 @@ export default function App() {
         })
       });
 
-      if (!response.ok) throw new Error("Failed to save changes to the catalog.");
+      if (!response.ok) throw new Error("Failed to save changes to the server.");
       
       const result = await response.json();
       
@@ -83,7 +83,7 @@ export default function App() {
     }
   };
 
-  // DELETE: Remove vegetable
+  // DELETE Logic
   const confirmDelete = async () => {
     if (!vegToDelete) return;
 
@@ -160,8 +160,7 @@ export default function App() {
               onClick={() => { closeModal(); setIsModalOpen(true); }}
               className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 flex items-center gap-2 shadow-lg shadow-emerald-600/20"
             >
-              <Plus className="w-4 h-4" />
-              Add Vegetable
+              <Plus className="w-4 h-4" /> Add Vegetable
             </button>
             <div className="relative flex-1 max-w-md hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -235,6 +234,8 @@ export default function App() {
                         <button 
                           onClick={(e) => { e.stopPropagation(); openEditModal(veg); }}
                           className="flex-1 bg-white text-gray-900 py-3 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors"
+                          aria-label={`Edit ${veg.name}`}
+                          title="Edit vegetable"
                         >
                           <Edit2 className="w-4 h-4" /> Edit
                         </button>
@@ -242,7 +243,8 @@ export default function App() {
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleDeleteVegetable(veg); }}
                           className="bg-white/20 backdrop-blur-md text-white p-3 rounded-2xl hover:bg-red-500 transition-colors"
-                          aria-label="Delete vegetable"
+                          aria-label={`Delete ${veg.name}`}
+                          title="Delete vegetable"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
@@ -271,14 +273,23 @@ export default function App() {
             <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }} className="relative bg-white w-full max-w-lg rounded-[40px] p-10 shadow-2xl overflow-hidden">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-3xl font-semibold">{editingId ? 'Update Item' : 'New Vegetable'}</h2>
-                <button type="button" onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Close modal"><X /></button>
+                {/* FIX: Close button accessibility */}
+                <button 
+                    type="button" 
+                    onClick={closeModal} 
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors" 
+                    aria-label="Close modal"
+                    title="Close"
+                >
+                    <X />
+                </button>
               </div>
               
               <form onSubmit={handleAddVegetable} className="space-y-6">
                 <div onClick={() => fileInputRef.current?.click()} className="group relative aspect-video border-2 border-dashed border-gray-200 rounded-[32px] flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all overflow-hidden">
                   {newVeg.imageUrl ? (
                     <>
-                      <img src={newVeg.imageUrl} className="w-full h-full object-cover" />
+                      <img src={newVeg.imageUrl} className="w-full h-full object-cover" alt="Preview" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                         <Upload className="text-white w-8 h-8" />
                       </div>
