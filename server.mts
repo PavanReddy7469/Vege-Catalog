@@ -2,14 +2,12 @@ import express from 'express';
 import cors from 'cors';
 
 const app = express();
-const PORT = 3000;
+
+// Use Render's dynamic port or default to 3000 for local dev
+const PORT = parseInt(process.env.PORT || '3000', 10); 
 
 // Middleware
-app.use(cors({
-  origin: "*", // This allows any site (like your Netlify app) to connect
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type"]
-}));
+app.use(cors()); // Simplified CORS works best for debugging
 app.use(express.json({ limit: '50mb' }));
 
 // Mock Database
@@ -28,14 +26,19 @@ let vegetables = [
     description: "Fresh green broccoli heads, high in vitamins.",
     imageUrl: "https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?auto=format&fit=crop&w=800&q=80" 
   },
-    { 
+  { 
     id: 3, 
     name: "Tomato", 
     price: 50, 
-    description: "Fresh red Tomatos",
-    imageUrl: "https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?auto=format&fit=crop&w=800&q=80" 
+    description: "Fresh red Tomatoes",
+    imageUrl: "https://images.unsplash.com/photo-1582284540020-8acaf01f344d?auto=format&fit=crop&w=800&q=80" 
   }
 ];
+
+// Health check route (so you don't see "Cannot GET /")
+app.get('/', (req, res) => {
+  res.send('✅ VeggieCatalog API is live and running!');
+});
 
 // Routes
 app.get('/api/vegetables', (req, res) => {
@@ -65,6 +68,13 @@ app.put('/api/vegetables/:id', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Backend running at http://localhost:${PORT}`);
+// Determine host based on environment
+const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+
+const server = app.listen(PORT, host, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+server.on('error', (err) => {
+  console.error('Server failed to start:', err);
 });
